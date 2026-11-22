@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#080609">
+<title>Uma aventura até você ♡</title>
+<style>
+:root{--bg:#080609;--pink:#f4bfd1;--pink2:#e99ab6;--wine:#853c5b;--wine2:#5e2943;--white:#fff1f5}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--white);font-family:Georgia,"Trebuchet MS",sans-serif}
+body{display:flex;justify-content:center;align-items:flex-start;padding:clamp(10px,3vh,24px) 12px 18px}
+.app{width:min(100%,520px);margin:auto}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:0 4px 11px}
+.brand{min-width:0;flex:1}
+h1{font-family:Georgia,serif;font-size:clamp(13px,3.5vw,18px);font-weight:700;letter-spacing:.08em;color:#df91ac;margin:0 0 4px;text-shadow:0 0 12px #e77ba433}
+#status{font-size:clamp(10px,2.7vw,12px);color:#ead2dc;min-height:15px}
+.top-right{display:flex;align-items:center;gap:6px;flex:none}
+.music-btn{background:#f8d9e3;color:#71334d;border:none;border-radius:13px;padding:8px 10px;font-size:clamp(11px,2.8vw,13px);font-weight:bold;cursor:pointer;box-shadow:0 3px 0 #b96f89;font-family:Georgia,serif}
+.music-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #b96f89}
+.counter{background:#f8d9e3;color:#71334d;border-radius:13px;padding:8px 11px;font-size:clamp(12px,3vw,14px);font-weight:bold;box-shadow:0 3px 0 #b96f89}
+.game-frame{position:relative;border:2px solid #d98da8;border-radius:15px;overflow:hidden;background:#f7c9d8;box-shadow:0 0 0 1px #55263e,0 8px 26px #0008}
+canvas{display:block;width:100%;height:auto;aspect-ratio:2/1;touch-action:none}
+.info-row{display:flex;justify-content:space-between;align-items:center;color:#d9c4cd;font-size:11px;padding:10px 3px 8px}
+.info-row span:last-child{color:#e9b7c9}
+.controls{display:grid;grid-template-columns:1fr 1fr 1.35fr;gap:12px;align-items:center;padding:4px 7px 0}
+.control{height:58px;border:2px solid #bd6e8a;border-radius:15px;background:linear-gradient(#f8dce5,#eeb9cb);color:#6c3048;font:700 24px Georgia;box-shadow:0 4px 0 #8e4562,0 7px 16px #0005;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}
+.control.jump{background:linear-gradient(#a84d70,#813957);border-color:#b86787;color:#fff0f5;font-size:27px;box-shadow:0 4px 0 #51243a,0 7px 16px #0005}
+.control:active,.control.pressed{transform:translateY(3px);box-shadow:0 1px 0 #8e4562}
+.hint{text-align:center;color:#cdb6c1;font-size:10px;padding:11px 0 0}
+.overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:15px;background:#160b13b8;backdrop-filter:blur(3px)}
+.overlay.show{display:flex}
+.dialog{width:min(100%,360px);padding:22px 18px 19px;background:#fff2f4;border:5px double #d99ab0;border-radius:13px;color:#6d3048;text-align:center;box-shadow:0 10px 35px #0009}
+.envelope{font-size:31px;margin-bottom:4px}
+.dialog h2{font-family:Georgia,serif;font-size:23px;margin:5px 0 8px;color:#73364f}
+.dialog p{font-size:13px;line-height:1.5;color:#a16d80;margin:0 0 15px}
+.action{border:0;border-radius:11px;padding:12px 17px;background:linear-gradient(#a64d70,#7b3452);color:#fff3f6;font-weight:bold;font-family:Georgia,serif;font-size:13px;box-shadow:0 4px 0 #4e2137;cursor:pointer}
+.action:active{transform:translateY(3px);box-shadow:0 1px 0 #4e2137}
+textarea{width:100%;min-height:80px;border:1px solid #dba5b7;border-radius:8px;padding:9px;font:13px Georgia;color:#6d3048;background:#fffafb;resize:vertical;margin-bottom:10px}
+.small{font-size:10px;color:#b88b9b;margin-top:10px}
+@media(max-width:370px){.controls{gap:8px}.control{height:53px}.info-row{font-size:10px}.top{padding-bottom:8px}}
+@media(min-height:780px){body{padding-top:clamp(18px,6vh,55px)}}
+</style>
+</head>
+<body>
+<main class="app">
+  <header class="top">
+    <div class="brand">
+      <h1>♡ UMA AVENTURA ATÉ VOCÊ ♡</h1>
+      <div id="status">Você está indo muito bem!</div>
+    </div>
+    <div class="top-right">
+      <button class="music-btn" id="musicBtn" aria-label="Ativar ou mutar som">🔊 Som</button>
+      <div class="counter" id="counter">♥ 0/10</div>
+    </div>
+  </header>
+
+  <section class="game-frame">
+    <canvas id="game" width="960" height="480" aria-label="Jogo de plataforma romântico"></canvas>
+    <div class="overlay" id="victory">
+      <div class="dialog">
+        <div class="envelope">💌</div>
+        <h2>Você conseguiu!</h2>
+        <p>Depois de tantos obstáculos, chegou ao seu destino. Cada coração fez parte dessa aventura especial.</p>
+        <button class="action" id="openLetter">ABRIR MINHA CARTA ❤️</button>
+        <div class="small">Uma surpresa espera por você ♡</div>
+      </div>
+    </div>
+    <div class="overlay" id="letter">
+      <div class="dialog">
+        <div class="envelope">♡ 💌 ♡</div>
+        <h2>Uma carta para você</h2>
+        <p id="letterContent">Se eu pudesse transformar carinho em corações, este caminho ainda seria pequeno para mostrar tudo o que sinto. ❤️</p>
+        <textarea id="message" placeholder="Escreva aqui sua mensagem especial (opcional)..."></textarea>
+        <button class="action" id="applyMessage">MOSTRAR MINHA MENSAGEM</button>
+        <button class="action" id="closeLetter" style="margin-left:6px;background:linear-gradient(#d99bb0,#b66c88);box-shadow:0 4px 0 #80435c">FECHAR</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="info-row"><span>▣ A aventura é sua!</span><span>♡ Cada coração conta</span></div>
+  <nav class="controls" aria-label="Controles do jogo">
+    <button class="control" id="left" aria-label="Esquerda">←</button>
+    <button class="control" id="right" aria-label="Direita">→</button>
+    <button class="control jump" id="jump" aria-label="Pular">↑</button>
+  </nav>
+  <div class="hint">Também pode jogar com as setas do teclado e espaço.</div>
+</main>
+<script>
+(()=>{
+// --- SISTEMA DE ÁUDIO (CAIXINHA DE MÚSICA + EFEITOS SONOROS) ---
+let audioCtx = null;
+let isMuted = false;
+let bgmStarted = false;
+let bgmTimer = null;
+let noteIndex = 0;
+
+// Melodia fofa em estilo caixinha de música (frequências em Hz)
+const melody = [
+  523.25, 659.25, 783.99, 1046.50, 987.77, 783.99, 659.25, 783.99,
+  587.33, 698.46, 880.00, 1046.50, 987.77, 783.99, 659.25, 0,
+  523.25, 659.25, 783.99, 1046.50, 1174.66, 1046.50, 987.77, 880.00,
+  783.99, 659.25, 587.33, 659.25, 523.25, 0, 523.25, 0
+];
+
+function initAudio() {
+  if (!audioCtx) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioContext();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  if (!bgmStarted) {
+    bgmStarted = true;
+    playBgmLoop();
+  }
+}
+
+function playBgmLoop() {
+  if (bgmTimer) clearInterval(bgmTimer);
+  bgmTimer = setInterval(() => {
+    if (isMuted || !audioCtx || audioCtx.state !== 'running') return;
+    const freq = melody[noteIndex % melody.length];
+    noteIndex++;
+    if (freq > 0) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      
+      // Envelope suave de caixinha de música
+      gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.045, audioCtx.currentTime + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.42);
+      
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.45);
+    }
+  }, 360);
+}
+
+function playJumpSound() {
+  initAudio();
+  if (isMuted || !audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(290, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(610, audioCtx.currentTime + 0.16);
+  
+  gain.gain.setValueAtTime(0.09, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.17);
+  
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.18);
+}
+
+function playHeartSound() {
+  if (isMuted || !audioCtx) return;
+  const notes = [659.25, 880, 1046.5];
+  notes.forEach((f, idx) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(f, audioCtx.currentTime + idx * 0.055);
+    
+    gain.gain.setValueAtTime(0.06, audioCtx.currentTime + idx * 0.055);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + idx * 0.055 + 0.18);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(audioCtx.currentTime + idx * 0.055);
+    osc.stop(audioCtx.currentTime + idx * 0.055 + 0.2);
+  });
+}
+
+function playVictorySound() {
+  if (isMuted || !audioCtx) return;
+  const notes = [523.25, 659.25, 783.99, 1046.50];
+  notes.forEach((f, idx) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(f, audioCtx.currentTime + idx * 0.11);
+    
+    gain.gain.setValueAtTime(0.08, audioCtx.currentTime + idx * 0.11);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + idx * 0.11 + 0.45);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(audioCtx.currentTime + idx * 0.11);
+    osc.stop(audioCtx.currentTime + idx * 0.11 + 0.48);
+  });
+}
+
+const musicBtn = document.getElementById('musicBtn');
+musicBtn.onclick = () => {
+  initAudio();
+  isMuted = !isMuted;
+  musicBtn.textContent = isMuted ? '🔇 Mudo' : '🔊 Som';
+};
+
+// --- LÓGICA E GRÁFICOS DO JOGO ---
+const canvas=document.getElementById('game'),c=canvas.getContext('2d');
+const W=960,H=480,world=3150,grav=.56;
+const platforms=[
+{x:0,y:400,w:250},{x:310,y:330,w:145},{x:505,y:275,w:145},{x:700,y:330,w:150},
+{x:900,y:270,w:145},{x:1095,y:325,w:150},{x:1295,y:260,w:150},{x:1495,y:315,w:145},
+{x:1690,y:250,w:150},{x:1890,y:310,w:150},{x:2090,y:250,w:150},{x:2290,y:315,w:145},
+{x:2490,y:255,w:150},{x:2700,y:330,w:150},{x:2920,y:400,w:230}
+].map(p=>({...p,h:14}));
+const hearts=[
+{x:155,y:360},{x:355,y:290},{x:550,y:235},{x:745,y:290},{x:945,y:230},
+{x:1140,y:285},{x:1340,y:220},{x:1540,y:275},{x:1740,y:210},{x:1940,y:270}
+].map((p,i)=>({...p,got:false,phase:i*1.17}));
+const player={x:45,y:345,w:24,h:34,vx:0,vy:0,ground:false,face:1};
+let input={left:false,right:false,jump:false},cam=0,count=0,finished=false,particles=[];
+const counter=document.getElementById('counter'),status=document.getElementById('status');
+const messages=['Você está indo muito bem!','Que coração lindo!','Mais um carinho coletado!','Seu caminho está ficando mais bonito!','Continue, falta pouco!','Cada coração é especial!'];
+
+function rect(x,y,w,h,col){c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),w,h)}
+function heart(x,y,s,col){c.save();c.translate(x,y);c.scale(s/24,s/24);c.fillStyle=col;c.beginPath();c.moveTo(0,9);c.bezierCurveTo(-22,-5,-13,-20,0,-10);c.bezierCurveTo(13,-20,22,-5,0,9);c.fill();c.restore()}
+
+function drawSky(){
+ let g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,'#f7bfd1');g.addColorStop(1,'#ffe9e9');c.fillStyle=g;c.fillRect(0,0,W,H);
+ c.fillStyle='#fff1d9';c.beginPath();c.arc(805,78,36,0,Math.PI*2);c.fill();
+ for(let i=0;i<70;i++){let x=(i*137+((cam*.13)%W))%W,y=(i*53)%215;c.fillStyle=i%3?'#fff7f7':'#eaa8bd';c.fillRect(x,y,3,3)}
+ for(let layer=0;layer<3;layer++){
+  let shift=cam*(.10+layer*.12),base=390+layer*27;
+  c.fillStyle=['#e8a4ba','#d98da9','#c77898'][layer];
+  c.beginPath();c.moveTo(0,H);for(let x=-100;x<=W+100;x+=100){let xx=x-(shift%200);c.lineTo(xx,base);c.lineTo(xx+75,base-105-layer*8);c.lineTo(xx+160,base)}c.lineTo(W,H);c.fill();
+ }
+}
+
+function drawFlowers(){
+ for(let x=8;x<W;x+=74){let y=397+Math.sin((x+cam)*.06)*2;c.strokeStyle='#70906e';c.lineWidth=2;c.beginPath();c.moveTo(x,y+2);c.lineTo(x+1,y-9);c.stroke();for(let j=0;j<5;j++){let a=j*Math.PI*2/5;c.fillStyle=j%2?'#fff8f6':'#f7c3d3';c.beginPath();c.arc(x+1+Math.cos(a)*5,y-10+Math.sin(a)*5,3,0,7);c.fill()}}
+}
+
+function drawPlatform(p){
+ let x=p.x-cam;if(x+p.w<0||x>W)return;
+ rect(x,p.y+4,p.w,p.h,'#8a3f5d');rect(x,p.y,p.w,5,'#d889a6');rect(x+5,p.y+5,p.w-10,3,'#b96785');
+ for(let i=12;i<p.w-8;i+=32){rect(x+i,p.y+1,5,2,'#f7d3df')}
+}
+
+function drawPlayer(){
+ let x=player.x-cam,y=player.y;
+ c.fillStyle='#7b3c5b44';c.beginPath();c.ellipse(x+12,y+35,12,3,0,0,7);c.fill();
+ rect(x+4,y+24,6,9,'#63334b');rect(x+15,y+24,6,9,'#63334b');
+ rect(x+4,y+12,17,14,'#fff0e9');rect(x+6,y+9,13,13,'#f0c4b5');
+ rect(x+5,y+7,14,5,'#553047');rect(x+4,y+10,4,9,'#553047');rect(x+17,y+10,3,8,'#553047');
+ rect(x+9+(player.face>0?2:0),y+14,2,2,'#513047');rect(x+15+(player.face>0?2:0),y+14,2,2,'#513047');
+ rect(x+11,y+19,4,2,'#d47b91');heart(x+12,y+24,7,'#e7799d');
+}
+
+function drawGoal(){
+ let x=3020-cam;rect(x,330,5,70,'#6c344d');c.fillStyle='#d84f7d';c.beginPath();c.moveTo(x+5,332);c.lineTo(x+53,344);c.lineTo(x+5,358);c.fill();heart(x+28,345,12,'#fff1f5');
+}
+
+function addBurst(x,y){for(let i=0;i<12;i++)particles.push({x,y,vx:(Math.random()-.5)*3,vy:-Math.random()*3-1,life:35,sz:5+Math.random()*6})}
+
+function update(){
+ if(finished)return;
+ let d=(input.right?1:0)-(input.left?1:0);player.vx=d*3.8;if(d)player.face=d;
+ player.x=Math.max(0,Math.min(world-player.w,player.x+player.vx));
+ if(input.jump&&player.ground){
+   player.vy=-11.6;
+   player.ground=false;
+   playJumpSound();
+ }
+ player.vy=Math.min(13,player.vy+grav);let prev=player.y;player.y+=player.vy;player.ground=false;
+ for(const p of platforms){if(player.x+player.w>p.x&&player.x<p.x+p.w&&prev+player.h<=p.y+5&&player.y+player.h>=p.y&&player.vy>=0){player.y=p.y-player.h;player.vy=0;player.ground=true}}
+ if(player.y>H+70){player.x=Math.max(15,player.x-125);player.y=270;player.vy=0}
+ hearts.forEach(h=>{if(!h.got&&player.x+player.w>h.x-12&&player.x<h.x+12&&player.y+player.h>h.y-12&&player.y<h.y+12){
+   h.got=true;count++;
+   counter.textContent=`♥ ${count}/10`;
+   status.textContent=messages[(count-1)%messages.length];
+   addBurst(h.x-cam,h.y);
+   playHeartSound();
+ }});
+ cam=Math.max(0,Math.min(world-W,player.x-W*.36));
+ if(count===10&&player.x>2960){
+   finished=true;
+   document.getElementById('victory').classList.add('show');
+   status.textContent='Você chegou ao seu destino!';
+   addBurst(W/2,H/2);
+   playVictorySound();
+ }
+ particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.08;p.life--});particles=particles.filter(p=>p.life>0);
+}
+
+function draw(){
+ drawSky();platforms.forEach(drawPlatform);drawFlowers();drawGoal();
+ hearts.forEach(h=>{if(!h.got){let x=h.x-cam,y=h.y+Math.sin(performance.now()/250+h.phase)*4;heart(x,y,21,'#e95383');heart(x-1,y-2,8,'#ffb6cb')}});
+ drawPlayer();
+ particles.forEach(p=>{c.globalAlpha=p.life/35;heart(p.x,p.y,p.sz,'#ed6e96');c.globalAlpha=1});
+}
+
+function loop(){update();draw();requestAnimationFrame(loop)}loop();
+
+function bind(id,k){
+ let el=document.getElementById(id);
+ const down=e=>{
+   e.preventDefault();
+   initAudio();
+   input[k]=true;
+   el.classList.add('pressed');
+   try{el.setPointerCapture(e.pointerId)}catch(_){}
+ };
+ const up=e=>{
+   e.preventDefault();
+   input[k]=false;
+   el.classList.remove('pressed');
+ };
+ el.addEventListener('pointerdown',down);
+ ['pointerup','pointercancel','lostpointercapture'].forEach(n=>el.addEventListener(n,up));
+}
+
+bind('left','left');bind('right','right');bind('jump','jump');
+
+addEventListener('keydown',e=>{
+ if(['ArrowLeft','ArrowRight','ArrowUp',' '].includes(e.key)){
+   e.preventDefault();
+   initAudio();
+ }
+ if(e.key==='ArrowLeft'||e.key==='a')input.left=true;
+ if(e.key==='ArrowRight'||e.key==='d')input.right=true;
+ if(e.key==='ArrowUp'||e.key===' '||e.key==='w')input.jump=true;
+});
+
+addEventListener('keyup',e=>{
+ if(e.key==='ArrowLeft'||e.key==='a')input.left=false;
+ if(e.key==='ArrowRight'||e.key==='d')input.right=false;
+ if(e.key==='ArrowUp'||e.key===' '||e.key==='w')input.jump=false;
+});
+
+document.getElementById('openLetter').onclick=()=>{
+ initAudio();
+ document.getElementById('victory').classList.remove('show');
+ document.getElementById('letter').classList.add('show');
+ addBurst(W/2,H/2);
+};
+document.getElementById('applyMessage').onclick=()=>{
+ let v=document.getElementById('message').value.trim();
+ if(v)document.getElementById('letterContent').textContent=v;
+ document.getElementById('message').value='';
+};
+document.getElementById('closeLetter').onclick=()=>document.getElementById('letter').classList.remove('show');
+})();
+</script>
+</body>
+</html>
